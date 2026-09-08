@@ -27,10 +27,12 @@ export const ordersService = {
         return newOrder;
       } catch (error) {
         console.error('Error agregando orden a Firebase:', error);
-        return addToLocalStorage(newOrder);
+        // El store maneja la persistencia automáticamente
+        return newOrder;
       }
     }
-    return addToLocalStorage(newOrder);
+    // El store maneja la persistencia automáticamente
+    return newOrder;
   },
 
   // Obtener todas las órdenes
@@ -46,10 +48,12 @@ export const ordersService = {
         return orders;
       } catch (error) {
         console.error('Error obteniendo órdenes de Firebase:', error);
-        return getFromLocalStorage();
+        return [];
       }
     }
-    return getFromLocalStorage();
+    // Si Firebase no está configurado, retornar vacío
+    // El store se encargará de persistir las órdenes en localStorage
+    return [];
   },
 
   // Obtener órdenes de un usuario
@@ -69,10 +73,10 @@ export const ordersService = {
         return orders;
       } catch (error) {
         console.error('Error obteniendo órdenes del usuario:', error);
-        return getFromLocalStorage().filter(o => o.userId === userId);
+        return [];
       }
     }
-    return getFromLocalStorage().filter(o => o.userId === userId);
+    return [];
   },
 
   // Actualizar estado de orden
@@ -90,42 +94,9 @@ export const ordersService = {
         return;
       } catch (error) {
         console.error('Error actualizando orden en Firebase:', error);
-        updateInLocalStorage(orderId, status);
         return;
       }
     }
-    updateInLocalStorage(orderId, status);
+    // El store maneja la persistencia automáticamente
   }
 };
-
-// Funciones auxiliares para localStorage
-function getFromLocalStorage(): Order[] {
-  const stored = localStorage.getItem('iphonelecheria-orders');
-  if (stored) {
-    const data = JSON.parse(stored);
-    return data.orders || [];
-  }
-  return [];
-}
-
-function addToLocalStorage(order: Order): Order {
-  const orders = getFromLocalStorage();
-  const updatedOrders = [...orders, order];
-  
-  localStorage.setItem('iphonelecheria-orders', JSON.stringify({
-    orders: updatedOrders
-  }));
-  
-  return order;
-}
-
-function updateInLocalStorage(orderId: string, status: Order['status']): void {
-  const orders = getFromLocalStorage();
-  const updatedOrders = orders.map((o) =>
-    o.id === orderId ? { ...o, status } : o
-  );
-  
-  localStorage.setItem('iphonelecheria-orders', JSON.stringify({
-    orders: updatedOrders
-  }));
-}

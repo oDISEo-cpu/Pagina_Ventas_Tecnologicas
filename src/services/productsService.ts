@@ -31,13 +31,19 @@ export const productsService = {
         querySnapshot.forEach((doc) => {
           products.push({ id: parseInt(doc.id), ...doc.data() } as Product);
         });
+        // Si Firebase está vacío, retornar productos iniciales
+        if (products.length === 0) {
+          return initialProducts;
+        }
         return products;
       } catch (error) {
         console.error('Error obteniendo productos de Firebase:', error);
-        return getFromLocalStorage();
+        return initialProducts;
       }
     }
-    return getFromLocalStorage();
+    // Si Firebase no está configurado, retornar productos iniciales
+    // El store se encargará de persistirlos en localStorage
+    return initialProducts;
   },
 
   // Agregar producto
@@ -112,18 +118,18 @@ export const productsService = {
   }
 };
 
-// Funciones auxiliares para localStorage
+// Funciones auxiliares para localStorage (fallback cuando Firebase falla)
+// Nota: El store principal usa persist de Zustand, estas funciones son solo para fallback
 function getFromLocalStorage(): Product[] {
   const stored = localStorage.getItem('iphonelecheria-products');
   if (stored) {
-    const data = JSON.parse(stored);
-    return data.products || [];
+    try {
+      const data = JSON.parse(stored);
+      return data.state?.products || data.products || [];
+    } catch {
+      return initialProducts;
+    }
   }
-  // Si no hay datos, inicializar con productos por defecto
-  localStorage.setItem('iphonelecheria-products', JSON.stringify({
-    products: initialProducts,
-    initialized: true
-  }));
   return initialProducts;
 }
 
@@ -136,35 +142,15 @@ function addToLocalStorage(productData: Omit<Product, 'id' | 'slug'>, slug: stri
     slug
   };
   
-  const updatedProducts = [...products, newProduct];
-  localStorage.setItem('iphonelecheria-products', JSON.stringify({
-    products: updatedProducts,
-    initialized: true
-  }));
-  
   return newProduct;
 }
 
-function updateInLocalStorage(id: number, data: Partial<Product>): void {
-  const products = getFromLocalStorage();
-  const updatedProducts = products.map((p) =>
-    p.id === id ? { ...p, ...data, slug: data.name ? generateSlug(data.name) : p.slug } : p
-  );
-  
-  localStorage.setItem('iphonelecheria-products', JSON.stringify({
-    products: updatedProducts,
-    initialized: true
-  }));
+function updateInLocalStorage(_id: number, _data: Partial<Product>): void {
+  // El store maneja la persistencia automáticamente
 }
 
-function deleteFromLocalStorage(id: number): void {
-  const products = getFromLocalStorage();
-  const updatedProducts = products.filter((p) => p.id !== id);
-  
-  localStorage.setItem('iphonelecheria-products', JSON.stringify({
-    products: updatedProducts,
-    initialized: true
-  }));
+function deleteFromLocalStorage(_id: number): void {
+  // El store maneja la persistencia automáticamente
 }
 
 function fileToBase64(file: File): Promise<string> {
