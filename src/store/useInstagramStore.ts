@@ -8,15 +8,6 @@ export interface InstagramPost {
   comments: number;
 }
 
-interface InstagramState {
-  posts: InstagramPost[];
-  initialized: boolean;
-  initialize: () => void;
-  addPost: (post: Omit<InstagramPost, 'id'>) => void;
-  updatePost: (id: number,  { image?: string; likes?: number; comments?: number }) => void;
-  deletePost: (id: number) => void;
-}
-
 const defaultPosts: InstagramPost[] = [
   { id: 1, image: "https://images.unsplash.com/photo-1696446702183-cbd13d78e1e7?w=400&q=80", likes: 234, comments: 18 },
   { id: 2, image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80", likes: 189, comments: 12 },
@@ -26,40 +17,38 @@ const defaultPosts: InstagramPost[] = [
   { id: 6, image: "https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=400&q=80", likes: 267, comments: 21 },
 ];
 
-export const useInstagramStore = create<InstagramState>()(
+interface InstagramStore {
+  posts: InstagramPost[];
+  updatePost: (id: number, image: string) => void;
+  addPost: (image: string) => void;
+  removePost: (id: number) => void;
+}
+
+export const useInstagramStore = create<InstagramStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       posts: defaultPosts,
-      initialized: false,
-
-      initialize: () => {
-        if (get().initialized) return;
-        set({ initialized: true });
-      },
-
-      addPost: (postData) => {
-        const posts = get().posts;
-        const maxId = posts.reduce((max, p) => Math.max(max, p.id), 0);
+      
+      updatePost: (id, image) => set((state) => ({
+        posts: state.posts.map((post) =>
+          post.id === id ? { ...post, image } : post
+        ),
+      })),
+      
+      addPost: (image) => set((state) => {
+        const maxId = state.posts.reduce((max, post) => Math.max(max, post.id), 0);
         const newPost: InstagramPost = {
-          ...postData,
           id: maxId + 1,
+          image,
+          likes: Math.floor(Math.random() * 300) + 50,
+          comments: Math.floor(Math.random() * 30) + 5,
         };
-        set({ posts: [...posts, newPost] });
-      },
-
-      updatePost: (id, data) => {
-        set((state) => ({
-          posts: state.posts.map((p) =>
-            p.id === id ? { ...p, ...data } : p
-          ),
-        }));
-      },
-
-      deletePost: (id) => {
-        set((state) => ({
-          posts: state.posts.filter((p) => p.id !== id),
-        }));
-      },
+        return { posts: [...state.posts, newPost] };
+      }),
+      
+      removePost: (id) => set((state) => ({
+        posts: state.posts.filter((post) => post.id !== id),
+      })),
     }),
     {
       name: 'iphonelecheria-instagram',

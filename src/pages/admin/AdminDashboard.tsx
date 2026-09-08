@@ -3,16 +3,17 @@ import { motion } from 'framer-motion';
 import {
   Package, Users, ShoppingBag, Plus, Edit3, Trash2,
   CheckCircle, Clock, Truck, XCircle, Search, DollarSign,
-  Image, Save, ArrowLeft, Eye, X
+  Image, Save, ArrowLeft, Eye, X, Instagram
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useOrdersStore, Order } from '../../store/useOrdersStore';
 import { useProductsStore } from '../../store/useProductsStore';
+import { useInstagramStore } from '../../store/useInstagramStore';
 import { formatPrice } from '../../lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
 
-type Tab = 'orders' | 'products' | 'users';
+type Tab = 'orders' | 'products' | 'users' | 'instagram';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
     { id: 'orders' as Tab, label: 'Pedidos', icon: Package },
     { id: 'products' as Tab, label: 'Productos', icon: ShoppingBag },
     { id: 'users' as Tab, label: 'Usuarios', icon: Users },
+    { id: 'instagram' as Tab, label: 'Instagram', icon: Instagram },
   ];
 
   return (
@@ -79,6 +81,7 @@ export default function AdminDashboard() {
         {activeTab === 'orders' && <OrdersPanel />}
         {activeTab === 'products' && <ProductsPanel />}
         {activeTab === 'users' && <UsersPanel />}
+        {activeTab === 'instagram' && <InstagramPanel />}
       </div>
     </div>
   );
@@ -754,6 +757,244 @@ function UsersPanel() {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ==================== INSTAGRAM PANEL ==================== */
+function InstagramPanel() {
+  const posts = useInstagramStore((state) => state.posts);
+  const updatePost = useInstagramStore((state) => state.updatePost);
+  const addPost = useInstagramStore((state) => state.addPost);
+  const removePost = useInstagramStore((state) => state.removePost);
+  const uploadImage = useProductsStore((state) => state.uploadImage);
+  
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [uploadingNew, setUploadingNew] = useState(false);
+
+  const handleImageUpload = async (postId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingId(postId);
+    try {
+      const imageUrl = await uploadImage(file);
+      updatePost(postId, imageUrl);
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      alert('Error al subir la imagen. Intenta de nuevo.');
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
+  const handleAddPost = async () => {
+    if (!newImageUrl.trim()) return;
+    
+    setUploadingNew(true);
+    try {
+      addPost(newImageUrl);
+      setNewImageUrl('');
+      setShowAddForm(false);
+    } catch (error) {
+      console.error('Error agregando post:', error);
+    } finally {
+      setUploadingNew(false);
+    }
+  };
+
+  const handleNewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingNew(true);
+    try {
+      const imageUrl = await uploadImage(file);
+      setNewImageUrl(imageUrl);
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      alert('Error al subir la imagen. Intenta de nuevo.');
+    } finally {
+      setUploadingNew(false);
+    }
+  };
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-apple-dark">Galería de Instagram</h2>
+          <p className="text-sm text-apple-gray">Administra las imágenes que se muestran en la sección de Instagram</p>
+        </div>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-apple-blue text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
+        >
+          <Plus className="w-4 h-4" />
+          Agregar Imagen
+        </button>
+      </div>
+
+      {/* Add Form */}
+      {showAddForm && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl p-6 mb-6 shadow-sm"
+        >
+          <h3 className="font-semibold text-apple-dark mb-4">Agregar nueva imagen</h3>
+          
+          {/* URL Input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-apple-dark mb-2">URL de imagen</label>
+            <input
+              type="url"
+              value={newImageUrl}
+              onChange={(e) => setNewImageUrl(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-apple-blue"
+              placeholder="https://ejemplo.com/imagen.jpg"
+            />
+          </div>
+
+          {/* File Upload */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-apple-dark mb-2">O importar desde tu dispositivo</label>
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleNewImageUpload}
+                className="hidden"
+                id="new-instagram-upload"
+              />
+              <label
+                htmlFor="new-instagram-upload"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-apple-blue hover:bg-blue-50 transition-all"
+              >
+                {uploadingNew ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-apple-blue border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-apple-gray">Subiendo imagen...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5 text-apple-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm text-apple-gray">Click para importar imagen</span>
+                  </>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Preview */}
+          {newImageUrl && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-apple-dark mb-2">Vista previa:</p>
+              <img src={newImageUrl} alt="Preview" className="w-32 h-32 object-cover rounded-xl border-2 border-gray-200" />
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleAddPost}
+              disabled={!newImageUrl.trim() || uploadingNew}
+              className="flex items-center gap-2 px-6 py-3 bg-apple-blue text-white rounded-xl hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="w-4 h-4" />
+              Agregar
+            </button>
+            <button
+              onClick={() => {
+                setShowAddForm(false);
+                setNewImageUrl('');
+              }}
+              className="px-6 py-3 border border-gray-200 text-apple-dark rounded-xl hover:bg-gray-50 transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Posts Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {posts.map((post) => (
+          <div key={post.id} className="bg-white rounded-xl overflow-hidden shadow-sm group relative">
+            <div className="aspect-square relative">
+              <img
+                src={post.image}
+                alt={`Instagram post ${post.id}`}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Overlay con acciones */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                {/* Upload button */}
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(post.id, e)}
+                    className="hidden"
+                    id={`upload-${post.id}`}
+                  />
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    {uploadingId === post.id ? (
+                      <div className="w-5 h-5 border-2 border-apple-blue border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Image className="w-5 h-5 text-apple-dark" />
+                    )}
+                  </div>
+                </label>
+
+                {/* Delete button */}
+                <button
+                  onClick={() => {
+                    if (confirm('¿Eliminar esta imagen?')) {
+                      removePost(post.id);
+                    }
+                  }}
+                  className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                >
+                  <Trash2 className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Info */}
+            <div className="p-3">
+              <div className="flex items-center gap-4 text-sm text-apple-gray">
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  {post.likes}
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  {post.comments}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {posts.length === 0 && (
+        <div className="bg-white rounded-xl p-12 text-center">
+          <Instagram className="w-16 h-16 text-apple-gray mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-apple-dark mb-2">No hay imágenes</h3>
+          <p className="text-apple-gray">Agrega imágenes para mostrar en la sección de Instagram</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,17 +1,11 @@
 import { motion } from 'framer-motion';
 import { Instagram, Heart, MessageCircle } from 'lucide-react';
 import { BUSINESS_INFO } from '../../lib/constants';
-
-const instagramPosts = [
-  { id: 1, image: "https://images.unsplash.com/photo-1696446702183-cbd13d78e1e7?w=400&q=80", likes: 234, comments: 18 },
-  { id: 2, image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&q=80", likes: 189, comments: 12 },
-  { id: 3, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80", likes: 312, comments: 25 },
-  { id: 4, image: "https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=400&q=80", likes: 156, comments: 8 },
-  { id: 5, image: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400&q=80", likes: 428, comments: 34 },
-  { id: 6, image: "https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=400&q=80", likes: 267, comments: 21 },
-];
+import { useInstagramStore } from '../../store/useInstagramStore';
 
 export default function InstagramGrid() {
+  const posts = useInstagramStore((state) => state.posts);
+
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,7 +22,7 @@ export default function InstagramGrid() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-          {instagramPosts.map((post, index) => (
+          {posts.map((post, index) => (
             <motion.a
               key={post.id}
               href={BUSINESS_INFO.instagramUrl}
