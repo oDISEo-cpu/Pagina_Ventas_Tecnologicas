@@ -8,7 +8,7 @@ interface AuthState {
   users: User[];
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (name: string, email: string, phone: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (name: string, email: string, phone: string, cedula: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   loadUsers: () => void;
 }
@@ -28,8 +28,8 @@ export const useAuthStore = create<AuthState>()(
         return { success: result.success, message: result.message };
       },
 
-      register: async (name, email, phone, password) => {
-        const result = await authService.register(name, email, phone, password);
+      register: async (name, email, phone, cedula, password) => {
+        const result = await authService.register(name, email, phone, cedula, password);
         if (result.success && result.user) {
           set({ user: result.user, isAuthenticated: true });
           // Recargar lista de usuarios

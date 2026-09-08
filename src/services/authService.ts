@@ -13,7 +13,7 @@ import { User } from '../types';
 // Servicio de autenticación híbrido (Firebase + localStorage fallback)
 export const authService = {
   // Registrar usuario
-  async register(name: string, email: string, phone: string, password: string): Promise<{ success: boolean; message: string; user?: User }> {
+  async register(name: string, email: string, phone: string, cedula: string, password: string): Promise<{ success: boolean; message: string; user?: User }> {
     if (isFirebaseConfigured() && auth) {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -25,6 +25,7 @@ export const authService = {
           name,
           email,
           phone,
+          cedula,
           role: 'user',
           createdAt: new Date().toISOString()
         };
@@ -48,6 +49,7 @@ export const authService = {
         name,
         email,
         phone,
+        cedula,
         role: 'user' as const,
         password, // Solo en localStorage (no seguro, pero es fallback)
         createdAt: new Date().toISOString()

@@ -26,6 +26,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  cedula?: string;
   role: 'user' | 'admin';
   createdAt: string;
 }
@@ -42,6 +43,7 @@ export interface Order {
   userName: string;
   userEmail: string;
   userPhone: string;
+  userCedula?: string;
   items: OrderItem[];
   subtotal: number;
   shipping: number;

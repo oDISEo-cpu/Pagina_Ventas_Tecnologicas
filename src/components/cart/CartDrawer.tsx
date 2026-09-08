@@ -36,6 +36,7 @@ export default function CartDrawer() {
       userName: user.name,
       userEmail: user.email,
       userPhone: user.phone,
+      userCedula: user.cedula,
       items: orderItems,
       subtotal: total,
       shipping,
@@ -44,14 +45,44 @@ export default function CartDrawer() {
       paymentMethod,
     });
 
-    // Also send WhatsApp message
-    const messageItems = items.map((item) => ({
-      name: item.product.name + (item.product.storage ? ` ${item.product.storage}` : '') + (item.product.color ? ` - ${item.product.color}` : ''),
-      quantity: item.quantity,
-      price: item.product.price,
-    }));
-    const message = generateWhatsAppMessage(messageItems, total + shipping);
-    window.open(`${BUSINESS_INFO.whatsappLink}?text=${message}`, '_blank');
+    // Generate detailed WhatsApp message for admin
+    const orderDate = new Date().toLocaleString('es-VE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    let adminMessage = `🛒 *NUEVO PEDIDO RECIBIDO*\n\n`;
+    adminMessage += `👤 *DATOS DEL CLIENTE:*\n`;
+    adminMessage += `• Nombre: ${user.name}\n`;
+    adminMessage += `• Cédula: ${user.cedula || 'No registrada'}\n`;
+    adminMessage += `• Teléfono: ${user.phone}\n`;
+    adminMessage += `• Email: ${user.email}\n\n`;
+    
+    adminMessage += `📦 *PRODUCTOS:*\n`;
+    items.forEach((item, index) => {
+      const productName = item.product.name + 
+        (item.product.storage ? ` ${item.product.storage}` : '') + 
+        (item.product.color ? ` - ${item.product.color}` : '');
+      adminMessage += `${index + 1}. ${productName}\n`;
+      adminMessage += `   Cantidad: ${item.quantity}\n`;
+      adminMessage += `   Precio unitario: $${item.product.price}\n`;
+      adminMessage += `   Subtotal: $${item.product.price * item.quantity}\n\n`;
+    });
+
+    adminMessage += `💰 *RESUMEN DEL PEDIDO:*\n`;
+    adminMessage += `• Subtotal: $${total}\n`;
+    adminMessage += `• Envío: $${shipping}\n`;
+    adminMessage += `• *TOTAL: $${total + shipping}*\n\n`;
+    
+    adminMessage += `💳 *Método de pago:* ${paymentMethod}\n`;
+    adminMessage += `📅 *Fecha:* ${orderDate}\n\n`;
+    adminMessage += `¡Gracias por tu compra! 🎉`;
+
+    const encodedMessage = encodeURIComponent(adminMessage);
+    window.open(`${BUSINESS_INFO.whatsappLink}?text=${encodedMessage}`, '_blank');
 
     setOrderSuccess(true);
     clearCart();

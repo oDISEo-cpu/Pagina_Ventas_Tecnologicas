@@ -222,7 +222,32 @@ function OrderCard({ order, onUpdateStatus, getStatusColor, getStatusLabel }: {
 
       {expanded && (
         <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t pt-4">
+          {/* Customer Info */}
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <p className="text-xs font-semibold text-apple-gray mb-2 uppercase">Datos del Cliente</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+              <div>
+                <span className="text-apple-gray">Nombre:</span>{' '}
+                <span className="font-medium text-apple-dark">{order.userName}</span>
+              </div>
+              <div>
+                <span className="text-apple-gray">Cédula:</span>{' '}
+                <span className="font-medium text-apple-dark">{order.userCedula || 'No registrada'}</span>
+              </div>
+              <div>
+                <span className="text-apple-gray">Teléfono:</span>{' '}
+                <span className="font-medium text-apple-dark">{order.userPhone}</span>
+              </div>
+              <div>
+                <span className="text-apple-gray">Email:</span>{' '}
+                <span className="font-medium text-apple-dark">{order.userEmail}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Order Items */}
           <div className="space-y-3">
+            <p className="text-xs font-semibold text-apple-gray uppercase">Productos</p>
             {order.items.map((item: any, i: number) => (
               <div key={i} className="flex items-center gap-3">
                 <img src={item.product.image} alt={item.product.name} className="w-12 h-12 rounded-lg object-cover" />
@@ -235,7 +260,7 @@ function OrderCard({ order, onUpdateStatus, getStatusColor, getStatusLabel }: {
             ))}
           </div>
           <div className="mt-4 pt-3 border-t flex justify-between text-sm">
-            <span className="text-apple-gray">Tel: {order.userPhone}</span>
+            <span className="text-apple-gray">Método de pago: {order.paymentMethod}</span>
             <span className="font-semibold">Total: {formatPrice(order.total)}</span>
           </div>
         </div>
@@ -715,11 +740,12 @@ function UsersPanel() {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase">Usuario</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden sm:table-cell">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden md:table-cell">Teléfono</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden sm:table-cell">Cédula</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden md:table-cell">Email</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden lg:table-cell">Teléfono</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase">Rol</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden md:table-cell">Pedidos</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden lg:table-cell">Registrado</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-apple-gray uppercase hidden xl:table-cell">Registrado</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -735,8 +761,9 @@ function UsersPanel() {
                         <span className="font-medium text-apple-dark text-sm">{u.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-apple-gray hidden sm:table-cell">{u.email}</td>
-                    <td className="px-4 py-3 text-sm text-apple-gray hidden md:table-cell">{u.phone}</td>
+                    <td className="px-4 py-3 text-sm text-apple-gray hidden sm:table-cell">{u.cedula || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-apple-gray hidden md:table-cell">{u.email}</td>
+                    <td className="px-4 py-3 text-sm text-apple-gray hidden lg:table-cell">{u.phone}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
@@ -747,7 +774,7 @@ function UsersPanel() {
                     <td className="px-4 py-3 text-sm text-apple-dark hidden md:table-cell">
                       {userOrders.length} ({formatPrice(userOrders.reduce((sum, o) => sum + o.total, 0))})
                     </td>
-                    <td className="px-4 py-3 text-sm text-apple-gray hidden lg:table-cell">
+                    <td className="px-4 py-3 text-sm text-apple-gray hidden xl:table-cell">
                       {new Date(u.createdAt).toLocaleDateString('es-VE')}
                     </td>
                   </tr>
