@@ -8,14 +8,14 @@ export default function FeaturedProducts() {
   const featured = products.filter(p => p.inStock).slice(0, 8);
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-apple-dark mb-3">
+          <h2 className="text-3xl sm:text-4xl font-bold text-apple-dark dark:text-white mb-3">
             Productos Destacados
           </h2>
-          <p className="text-apple-gray text-lg max-w-2xl mx-auto">
+          <p className="text-apple-gray dark:text-gray-400 text-lg max-w-2xl mx-auto">
             Los mejores productos Apple y gaming al mejor precio en Venezuela
           </p>
         </div>
@@ -31,7 +31,7 @@ export default function FeaturedProducts() {
         <div className="text-center mt-12">
           <Link
             to="/products"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-apple-dark text-white font-medium rounded-full hover:bg-black transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-apple-dark dark:bg-white dark:text-black text-white font-medium rounded-full hover:bg-black dark:hover:bg-gray-200 transition-colors"
           >
             Ver todos los productos
             <ArrowRight className="w-4 h-4" />

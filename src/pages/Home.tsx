@@ -13,7 +13,7 @@ export default function Home() {
       <HeroCarousel />
 
       {/* Trust badges */}
-      <section className="py-8 bg-white border-b">
+      <section className="py-8 bg-white dark:bg-gray-900 border-b dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <motion.div
@@ -23,7 +23,7 @@ export default function Home() {
               className="flex items-center justify-center gap-3"
             >
               <Truck className="w-6 h-6 text-apple-blue" />
-              <span className="text-sm font-medium text-apple-dark">Envíos a toda Venezuela</span>
+              <span className="text-sm font-medium text-apple-dark dark:text-white">Envíos a toda Venezuela</span>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -32,7 +32,7 @@ export default function Home() {
               className="flex items-center justify-center gap-3"
             >
               <CreditCard className="w-6 h-6 text-apple-blue" />
-              <span className="text-sm font-medium text-apple-dark">Múltiples métodos de pago</span>
+              <span className="text-sm font-medium text-apple-dark dark:text-white">Múltiples métodos de pago</span>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -41,7 +41,7 @@ export default function Home() {
               className="flex items-center justify-center gap-3"
             >
               <ShieldCheck className="w-6 h-6 text-apple-blue" />
-              <span className="text-sm font-medium text-apple-dark">Productos 100% originales</span>
+              <span className="text-sm font-medium text-apple-dark dark:text-white">Productos 100% originales</span>
             </motion.div>
           </div>
         </div>

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Menu, X, Search, Apple, User, LogOut, Package, Shield, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, Apple, User, LogOut, Package, Shield, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useThemeStore } from '../../store/useThemeStore';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,6 +17,8 @@ export default function Header() {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const logout = useAuthStore((state) => state.logout);
+  const theme = useThemeStore((state) => state.theme);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -44,16 +47,18 @@ export default function Header() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-white/80 backdrop-blur-sm'
+      isScrolled 
+        ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm' 
+        : 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center group-hover:bg-apple-blue transition-colors">
-              <Apple className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center group-hover:bg-apple-blue transition-colors">
+              <Apple className="w-5 h-5 text-white dark:text-black" />
             </div>
-            <span className="font-bold text-lg text-apple-dark hidden sm:block">
+            <span className="font-bold text-lg text-apple-dark dark:text-white hidden sm:block">
               iPhone<span className="text-apple-blue">Lechería</span>
             </span>
           </Link>
@@ -65,7 +70,7 @@ export default function Header() {
                 key={link.to}
                 to={link.to}
                 className={`text-sm font-medium transition-colors hover:text-apple-blue ${
-                  location.pathname === link.to ? 'text-apple-blue' : 'text-apple-dark'
+                  location.pathname === link.to ? 'text-apple-blue' : 'text-apple-dark dark:text-white'
                 }`}
               >
                 {link.label}
@@ -78,17 +83,30 @@ export default function Header() {
             {/* Search */}
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              <Search className="w-5 h-5 text-apple-dark" />
+              <Search className="w-5 h-5 text-apple-dark dark:text-white" />
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Cambiar tema"
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-apple-dark dark:text-white" />
+              ) : (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              )}
             </button>
 
             {/* Cart */}
             <button
               onClick={toggleCart}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
             >
-              <ShoppingCart className="w-5 h-5 text-apple-dark" />
+              <ShoppingCart className="w-5 h-5 text-apple-dark dark:text-white" />
               {itemCount > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
@@ -105,7 +123,7 @@ export default function Header() {
               {isAuthenticated && user ? (
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="w-7 h-7 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs font-medium">
                     {user.name.charAt(0).toUpperCase()}
@@ -115,9 +133,9 @@ export default function Header() {
               ) : (
                 <Link
                   to="/login"
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <User className="w-5 h-5 text-apple-dark" />
+                  <User className="w-5 h-5 text-apple-dark dark:text-white" />
                 </Link>
               )}
 
@@ -129,14 +147,14 @@ export default function Header() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -5, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden"
+                    className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 overflow-hidden"
                   >
                     {/* User Info */}
-                    <div className="px-4 py-3 border-b">
-                      <p className="font-medium text-apple-dark text-sm truncate">{user.name}</p>
+                    <div className="px-4 py-3 border-b dark:border-gray-700">
+                      <p className="font-medium text-apple-dark dark:text-white text-sm truncate">{user.name}</p>
                       <p className="text-xs text-apple-gray truncate">{user.email}</p>
                       {user.role === 'admin' && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 text-xs rounded-full font-medium">
                           Administrador
                         </span>
                       )}
@@ -146,7 +164,7 @@ export default function Header() {
                     <div className="py-1">
                       <Link
                         to="/my-orders"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-apple-dark hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-apple-dark dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
                         <Package className="w-4 h-4 text-apple-gray" />
                         Mis Pedidos
@@ -154,7 +172,7 @@ export default function Header() {
                       {user.role === 'admin' && (
                         <Link
                           to="/admin"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-apple-dark hover:bg-gray-50 transition-colors"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-apple-dark dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
                           <Shield className="w-4 h-4 text-purple-500" />
                           Panel Admin
@@ -163,10 +181,10 @@ export default function Header() {
                     </div>
 
                     {/* Logout */}
-                    <div className="border-t py-1">
+                    <div className="border-t dark:border-gray-700 py-1">
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left"
                       >
                         <LogOut className="w-4 h-4" />
                         Cerrar Sesión
@@ -180,9 +198,9 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isMenuOpen ? <X className="w-5 h-5 dark:text-white" /> : <Menu className="w-5 h-5 dark:text-white" />}
             </button>
           </div>
         </div>
@@ -211,7 +229,7 @@ export default function Header() {
                         setSearchQuery('');
                       }
                     }}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent"
                     autoFocus
                   />
                 </div>
@@ -228,7 +246,7 @@ export default function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="md:hidden bg-white border-t border-gray-100 shadow-lg"
+            className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-lg"
           >
             <nav className="px-4 py-4 space-y-1">
               {navLinks.map(link => (
@@ -238,7 +256,7 @@ export default function Header() {
                   className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     location.pathname === link.to
                       ? 'bg-apple-blue/10 text-apple-blue'
-                      : 'text-apple-dark hover:bg-gray-50'
+                      : 'text-apple-dark dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
                   {link.label}
@@ -247,10 +265,10 @@ export default function Header() {
               {/* Mobile user links */}
               {isAuthenticated && user && (
                 <>
-                  <div className="border-t my-2" />
+                  <div className="border-t dark:border-gray-800 my-2" />
                   <Link
                     to="/my-orders"
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-dark hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-dark dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     <Package className="w-4 h-4" />
                     Mis Pedidos
@@ -258,7 +276,7 @@ export default function Header() {
                   {user.role === 'admin' && (
                     <Link
                       to="/admin"
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
                     >
                       <Shield className="w-4 h-4" />
                       Panel Admin
@@ -266,7 +284,7 @@ export default function Header() {
                   )}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     Cerrar Sesión
@@ -275,17 +293,17 @@ export default function Header() {
               )}
               {!isAuthenticated && (
                 <>
-                  <div className="border-t my-2" />
+                  <div className="border-t dark:border-gray-800 my-2" />
                   <Link
                     to="/login"
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-dark hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-dark dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     <User className="w-4 h-4" />
                     Iniciar Sesión
                   </Link>
                   <Link
                     to="/register"
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-blue hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-blue hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
                     Crear Cuenta
                   </Link>
