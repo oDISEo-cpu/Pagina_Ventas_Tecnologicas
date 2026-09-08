@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Search, Grid3X3, LayoutList } from 'lucide-react';
 import ProductCard from '../components/products/ProductCard';
 import ProductFilters from '../components/products/ProductFilters';
-import { filterProducts } from '../lib/products';
+import { useProductsStore } from '../store/useProductsStore';
 
 export default function Products() {
   const [searchParams] = useSearchParams();
@@ -18,16 +18,37 @@ export default function Products() {
   const [gridCols, setGridCols] = useState<3 | 4>(3);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  const products = useProductsStore((state) => state.products);
+
   const filteredProducts = useMemo(() => {
-    return filterProducts({
-      category,
-      condition,
-      storage,
-      minPrice: priceRange[0],
-      maxPrice: priceRange[1],
-      search,
-    });
-  }, [category, condition, storage, priceRange, search]);
+    let filtered = [...products];
+
+    if (category !== 'all') {
+      filtered = filtered.filter(p => p.category === category);
+    }
+    if (condition !== 'all') {
+      filtered = filtered.filter(p => p.condition === condition);
+    }
+    if (storage) {
+      filtered = filtered.filter(p => p.storage?.includes(storage));
+    }
+    if (priceRange[0] > 0) {
+      filtered = filtered.filter(p => p.price >= priceRange[0]);
+    }
+    if (priceRange[1] < 2000) {
+      filtered = filtered.filter(p => p.price <= priceRange[1]);
+    }
+    if (search) {
+      const term = search.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(term) ||
+        p.description.toLowerCase().includes(term) ||
+        p.category.toLowerCase().includes(term)
+      );
+    }
+
+    return filtered;
+  }, [products, category, condition, storage, priceRange, search]);
 
   const handleReset = () => {
     setCategory('all');

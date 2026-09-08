@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '../products/ProductCard';
-import { products } from '../../lib/products';
+import { useProductsStore } from '../../store/useProductsStore';
 
 export default function FeaturedProducts() {
+  const products = useProductsStore((state) => state.products);
   const featured = products.filter(p => p.inStock).slice(0, 8);
 
   return (

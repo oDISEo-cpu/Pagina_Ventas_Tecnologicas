@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Menu, X, Search, Apple } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, Apple, User, LogOut, Package, Shield, ChevronDown } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const itemCount = useCartStore((state) => state.getItemCount());
   const toggleCart = useCartStore((state) => state.toggleCart);
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -22,7 +27,13 @@ export default function Header() {
 
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsUserMenuOpen(false);
   }, [location]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const navLinks = [
     { to: '/', label: 'Inicio' },
@@ -63,7 +74,7 @@ export default function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Search */}
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -88,6 +99,83 @@ export default function Header() {
                 </motion.span>
               )}
             </button>
+
+            {/* User Menu */}
+            <div className="relative">
+              {isAuthenticated && user ? (
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-7 h-7 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs font-medium">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <ChevronDown className="w-3 h-3 text-apple-gray hidden sm:block" />
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <User className="w-5 h-5 text-apple-dark" />
+                </Link>
+              )}
+
+              {/* Dropdown */}
+              <AnimatePresence>
+                {isUserMenuOpen && isAuthenticated && user && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden"
+                  >
+                    {/* User Info */}
+                    <div className="px-4 py-3 border-b">
+                      <p className="font-medium text-apple-dark text-sm truncate">{user.name}</p>
+                      <p className="text-xs text-apple-gray truncate">{user.email}</p>
+                      {user.role === 'admin' && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                          Administrador
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      <Link
+                        to="/my-orders"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-apple-dark hover:bg-gray-50 transition-colors"
+                      >
+                        <Package className="w-4 h-4 text-apple-gray" />
+                        Mis Pedidos
+                      </Link>
+                      {user.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-apple-dark hover:bg-gray-50 transition-colors"
+                        >
+                          <Shield className="w-4 h-4 text-purple-500" />
+                          Panel Admin
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* Logout */}
+                    <div className="border-t py-1">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Mobile menu button */}
             <button
@@ -156,6 +244,53 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              {/* Mobile user links */}
+              {isAuthenticated && user && (
+                <>
+                  <div className="border-t my-2" />
+                  <Link
+                    to="/my-orders"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-dark hover:bg-gray-50 transition-colors"
+                  >
+                    <Package className="w-4 h-4" />
+                    Mis Pedidos
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Panel Admin
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Cerrar Sesión
+                  </button>
+                </>
+              )}
+              {!isAuthenticated && (
+                <>
+                  <div className="border-t my-2" />
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-dark hover:bg-gray-50 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    Iniciar Sesión
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-apple-blue hover:bg-blue-50 transition-colors"
+                  >
+                    Crear Cuenta
+                  </Link>
+                </>
+              )}
             </nav>
           </motion.div>
         )}
