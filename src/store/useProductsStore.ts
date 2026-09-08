@@ -1,41 +1,55 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Product } from '../types';
-import { products as defaultProducts } from '../lib/products';
+import { products as initialProducts } from '../lib/products';
 
 interface ProductsState {
   products: Product[];
+  initialized: boolean;
+  initialize: () => void;
   addProduct: (product: Omit<Product, 'id' | 'slug'>) => void;
-  updateProduct: (id: number, updates: Partial<Product>) => void;
+  updateProduct: (id: number, data: Partial<Product>) => void;
   deleteProduct: (id: number) => void;
-  getProductById: (id: number) => Product | undefined;
-  resetToDefaults: () => void;
+  getProductBySlug: (slug: string) => Product | undefined;
+}
+
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .substring(0, 50);
 }
 
 export const useProductsStore = create<ProductsState>()(
   persist(
     (set, get) => ({
-      products: defaultProducts,
+      products: [],
+      initialized: false,
 
-      addProduct: (productData) => {
-        const newId = Math.max(...get().products.map((p) => p.id), 0) + 1;
-        const slug = productData.name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '');
-
-        const newProduct: Product = {
-          ...productData,
-          id: newId,
-          slug: `${slug}-${newId}`,
-        };
-
-        set((state) => ({ products: [...state.products, newProduct] }));
+      initialize: () => {
+        if (!get().initialized) {
+          set({ products: initialProducts, initialized: true });
+        }
       },
 
-      updateProduct: (id, updates) => {
+      addProduct: (productData) => {
+        const products = get().products;
+        const maxId = products.reduce((max, p) => Math.max(max, p.id), 0);
+        const newProduct: Product = {
+          ...productData as Product,
+          id: maxId + 1,
+          slug: generateSlug(productData.name),
+        };
+        set({ products: [...products, newProduct] });
+      },
+
+      updateProduct: (id, data) => {
         set((state) => ({
-          products: state.products.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+          products: state.products.map((p) =>
+            p.id === id ? { ...p, ...data, slug: data.name ? generateSlug(data.name) : p.slug } : p
+          ),
         }));
       },
 
@@ -45,14 +59,17 @@ export const useProductsStore = create<ProductsState>()(
         }));
       },
 
-      getProductById: (id) => {
-        return get().products.find((p) => p.id === id);
-      },
-
-      resetToDefaults: () => {
-        set({ products: defaultProducts });
+      getProductBySlug: (slug) => {
+        return get().products.find((p) => p.slug === slug);
       },
     }),
-    { name: 'products-storage' }
+    {
+      name: 'iphonelecheria-products',
+      // Only persist if initialized
+      partialize: (state) => ({
+        products: state.products,
+        initialized: state.initialized,
+      }),
+    }
   )
 );

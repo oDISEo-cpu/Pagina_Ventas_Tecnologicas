@@ -17,10 +17,9 @@ type Tab = 'orders' | 'products' | 'users';
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const isAdmin = useAuthStore((state) => state.isAdmin);
   const [activeTab, setActiveTab] = useState<Tab>('orders');
 
-  if (!user || !isAdmin()) {
+  if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen pt-20 pb-16 bg-apple-bg flex items-center justify-center">
         <div className="text-center">

@@ -21,6 +21,36 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'user' | 'admin';
+  createdAt: string;
+}
+
+export interface OrderItem {
+  product: Product;
+  quantity: number;
+  price: number;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userPhone: string;
+  items: OrderItem[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  paymentMethod: string;
+  createdAt: string;
+}
+
 export interface Testimonial {
   id: number;
   name: string;
@@ -28,11 +58,4 @@ export interface Testimonial {
   rating: number;
   text: string;
   location: string;
-}
-
-export interface Service {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
 }

@@ -39,12 +39,12 @@ export default function Register() {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const result = register({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      password: formData.password,
-    });
+    const result = register(
+      formData.name,
+      formData.email,
+      formData.phone,
+      formData.password,
+    );
 
     setLoading(false);
 

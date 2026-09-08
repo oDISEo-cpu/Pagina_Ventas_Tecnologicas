@@ -1,14 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { User } from '../types';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
+interface StoredUser extends User {
   password: string;
-  role: 'user' | 'admin';
-  createdAt: string;
 }
 
 interface AuthState {
@@ -16,77 +11,112 @@ interface AuthState {
   users: User[];
   isAuthenticated: boolean;
   login: (email: string, password: string) => { success: boolean; message: string };
-  register: (data: { name: string; email: string; phone: string; password: string }) => { success: boolean; message: string };
+  register: (name: string, email: string, phone: string, password: string) => { success: boolean; message: string };
   logout: () => void;
-  isAdmin: () => boolean;
+  refreshUsers: () => void;
 }
 
-// Admin por defecto
-const defaultAdmin: User = {
-  id: 'admin-001',
-  name: 'Administrador',
-  email: 'admin@iphonelecheria.com',
-  phone: '0414-8808810',
-  password: 'admin123',
-  role: 'admin',
-  createdAt: new Date().toISOString(),
+const USERS_KEY = 'iphonelecheria-users';
+
+const getStoredUsers = (): StoredUser[] => {
+  try {
+    const stored = localStorage.getItem(USERS_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  
+  // Default admin user
+  const defaultAdmin: StoredUser = {
+    id: 'admin-001',
+    name: 'Administrador',
+    email: 'admin@iphonelecheria.com',
+    phone: '0414-8808810',
+    role: 'admin',
+    password: 'admin123',
+    createdAt: new Date().toISOString(),
+  };
+  
+  const defaults = [defaultAdmin];
+  localStorage.setItem(USERS_KEY, JSON.stringify(defaults));
+  return defaults;
+};
+
+const saveUsers = (users: StoredUser[]) => {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+};
+
+const toPublicUser = (stored: StoredUser): User => {
+  const { password: _, ...user } = stored;
+  return user;
+};
+
+const getPublicUsers = (): User[] => {
+  return getStoredUsers().map(toPublicUser);
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      users: [defaultAdmin],
+      users: getPublicUsers(),
       isAuthenticated: false,
 
       login: (email, password) => {
-        const state = get();
-        const found = state.users.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-        );
+        const users = getStoredUsers();
+        const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+        
         if (found) {
-          set({ user: found, isAuthenticated: true });
+          const publicUser = toPublicUser(found);
+          set({ user: publicUser, isAuthenticated: true, users: getPublicUsers() });
           return { success: true, message: 'Inicio de sesión exitoso' };
         }
+        
         return { success: false, message: 'Email o contraseña incorrectos' };
       },
 
-      register: (data) => {
-        const state = get();
-        const exists = state.users.find(
-          (u) => u.email.toLowerCase() === data.email.toLowerCase()
-        );
-        if (exists) {
+      register: (name, email, phone, password) => {
+        const users = getStoredUsers();
+        
+        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
           return { success: false, message: 'Este email ya está registrado' };
         }
 
-        const newUser: User = {
+        const newUser: StoredUser = {
           id: `user-${Date.now()}`,
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          password: data.password,
+          name,
+          email,
+          phone,
           role: 'user',
+          password,
           createdAt: new Date().toISOString(),
         };
 
-        set((state) => ({
-          users: [...state.users, newUser],
-          user: newUser,
-          isAuthenticated: true,
-        }));
+        users.push(newUser);
+        saveUsers(users);
 
-        return { success: true, message: 'Registro exitoso' };
+        const publicUser = toPublicUser(newUser);
+        set({ user: publicUser, isAuthenticated: true, users: getPublicUsers() });
+        return { success: true, message: 'Cuenta creada exitosamente' };
       },
 
       logout: () => {
         set({ user: null, isAuthenticated: false });
       },
 
-      isAdmin: () => {
-        return get().user?.role === 'admin';
+      refreshUsers: () => {
+        set({ users: getPublicUsers() });
       },
     }),
-    { name: 'auth-storage' }
+    {
+      name: 'iphonelecheria-auth',
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.refreshUsers();
+        }
+      },
+    }
   )
 );
