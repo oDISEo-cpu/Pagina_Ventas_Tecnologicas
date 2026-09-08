@@ -11,7 +11,7 @@ const slides = [
     cta: "Comprar Ahora",
     link: "/products",
     bg: "from-gray-900 via-gray-800 to-black",
-    image: "https://images.unsplash.com/photo-1696446702183-cbd13d78e1e7?w=800&q=80",
+    image: "https://www.att.com/scmsassets/global/devices/phones/apple/apple-iphone-17-pro-max/defaultimage/cosmic-orange-hero-zoom.png",
   },
   {
     id: 2,
