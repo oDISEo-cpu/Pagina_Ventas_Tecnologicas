@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package, Users, ShoppingBag, Plus, Edit3, Trash2,
   CheckCircle, Clock, Truck, XCircle, Search, DollarSign,
-  Image, Save, ArrowLeft, Eye, X, Instagram
+  Image, Save, ArrowLeft, Eye, X, Instagram, Bell, Mail, MessageCircle, Send
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useOrdersStore, Order } from '../../store/useOrdersStore';
@@ -12,8 +12,9 @@ import { useInstagramStore } from '../../store/useInstagramStore';
 import { formatPrice } from '../../lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product } from '../../types';
+import { notificationService, isEmailConfigured } from '../../services/notificationService';
 
-type Tab = 'orders' | 'products' | 'users' | 'instagram';
+type Tab = 'orders' | 'products' | 'users' | 'instagram' | 'notifications';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export default function AdminDashboard() {
     { id: 'products' as Tab, label: 'Productos', icon: ShoppingBag },
     { id: 'users' as Tab, label: 'Usuarios', icon: Users },
     { id: 'instagram' as Tab, label: 'Instagram', icon: Instagram },
+    { id: 'notifications' as Tab, label: 'Notificaciones', icon: Bell },
   ];
 
   return (
@@ -82,6 +84,7 @@ export default function AdminDashboard() {
         {activeTab === 'products' && <ProductsPanel />}
         {activeTab === 'users' && <UsersPanel />}
         {activeTab === 'instagram' && <InstagramPanel />}
+        {activeTab === 'notifications' && <NotificationsPanel />}
       </div>
     </div>
   );
@@ -183,6 +186,49 @@ function OrderCard({ order, onUpdateStatus, getStatusColor, getStatusLabel }: {
   getStatusLabel: (status: string) => string;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<Order['status']>(order.status);
+  const [customMessage, setCustomMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [notificationSent, setNotificationSent] = useState<{ type: string; success: boolean } | null>(null);
+
+  const handleStatusChange = (newStatus: Order['status']) => {
+    const oldStatus = order.status;
+    onUpdateStatus(order.id, newStatus);
+    setSelectedStatus(newStatus);
+    
+    // Solo mostrar modal si el estado cambió
+    if (oldStatus !== newStatus) {
+      setShowNotifyModal(true);
+    }
+  };
+
+  const handleSendWhatsApp = () => {
+    notificationService.sendWhatsAppNotification(order, selectedStatus, customMessage);
+    notificationService.saveNotificationToHistory(order.id, 'whatsapp', selectedStatus, true);
+    setNotificationSent({ type: 'whatsapp', success: true });
+    setTimeout(() => {
+      setShowNotifyModal(false);
+      setNotificationSent(null);
+      setCustomMessage('');
+    }, 2000);
+  };
+
+  const handleSendEmail = async () => {
+    setSending(true);
+    const success = await notificationService.sendEmailNotification(order, selectedStatus);
+    notificationService.saveNotificationToHistory(order.id, 'email', selectedStatus, success);
+    setSending(false);
+    setNotificationSent({ type: 'email', success });
+    
+    if (success) {
+      setTimeout(() => {
+        setShowNotifyModal(false);
+        setNotificationSent(null);
+        setCustomMessage('');
+      }, 2000);
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm">
@@ -207,7 +253,7 @@ function OrderCard({ order, onUpdateStatus, getStatusColor, getStatusLabel }: {
             <select
               onClick={(e) => e.stopPropagation()}
               value={order.status}
-              onChange={(e) => onUpdateStatus(order.id, e.target.value as Order['status'])}
+              onChange={(e) => handleStatusChange(e.target.value as Order['status'])}
               className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-apple-blue"
             >
               <option value="pending">Pendiente</option>
@@ -219,6 +265,112 @@ function OrderCard({ order, onUpdateStatus, getStatusColor, getStatusLabel }: {
           </div>
         </div>
       </div>
+
+      {/* Notification Modal */}
+      <AnimatePresence>
+        {showNotifyModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50"
+              onClick={() => setShowNotifyModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                {notificationSent ? (
+                  <div className="text-center py-8">
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                      notificationSent.success ? 'bg-green-100' : 'bg-red-100'
+                    }`}>
+                      {notificationSent.success ? (
+                        <CheckCircle className="w-8 h-8 text-green-500" />
+                      ) : (
+                        <XCircle className="w-8 h-8 text-red-500" />
+                      )}
+                    </div>
+                    <h3 className="text-lg font-semibold text-apple-dark mb-2">
+                      {notificationSent.success ? '¡Notificación Enviada!' : 'Error al Enviar'}
+                    </h3>
+                    <p className="text-sm text-apple-gray">
+                      {notificationSent.success
+                        ? `Se envió la notificación por ${notificationSent.type === 'whatsapp' ? 'WhatsApp' : 'email'}`
+                        : 'No se pudo enviar la notificación'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-apple-blue/10 rounded-full flex items-center justify-center">
+                        <Bell className="w-5 h-5 text-apple-blue" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-apple-dark">Notificar al Cliente</h3>
+                        <p className="text-xs text-apple-gray">Pedido #{order.id} → {getStatusLabel(selectedStatus)}</p>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-apple-dark mb-2">
+                        Mensaje adicional (opcional)
+                      </label>
+                      <textarea
+                        value={customMessage}
+                        onChange={(e) => setCustomMessage(e.target.value)}
+                        placeholder="Ej: Tu pedido saldrá mañana a las 10am..."
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-apple-blue resize-none"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleSendWhatsApp}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors font-medium"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        Notificar por WhatsApp
+                      </button>
+
+                      <button
+                        onClick={handleSendEmail}
+                        disabled={sending || !isEmailConfigured()}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-apple-blue text-white rounded-xl hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {sending ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Mail className="w-5 h-5" />
+                        )}
+                        {isEmailConfigured() ? 'Notificar por Email' : 'Email no configurado'}
+                      </button>
+
+                      {!isEmailConfigured() && (
+                        <p className="text-xs text-apple-gray text-center">
+                          💡 Configura EmailJS para enviar emails automáticos
+                        </p>
+                      )}
+
+                      <button
+                        onClick={() => setShowNotifyModal(false)}
+                        className="w-full py-2.5 text-sm text-apple-gray hover:text-apple-dark transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {expanded && (
         <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t pt-4">
@@ -1022,6 +1174,126 @@ function InstagramPanel() {
           <p className="text-apple-gray">Agrega imágenes para mostrar en la sección de Instagram</p>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ==================== NOTIFICATIONS PANEL ==================== */
+function NotificationsPanel() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useState(() => {
+    setNotifications(notificationService.getNotificationHistory().reverse());
+  });
+
+  const getTypeIcon = (type: string) => {
+    if (type === 'whatsapp') return <MessageCircle className="w-4 h-4 text-green-500" />;
+    return <Mail className="w-4 h-4 text-apple-blue" />;
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: '⏳ Pendiente',
+      confirmed: '✅ Confirmado',
+      shipped: '🚚 Enviado',
+      delivered: '🎉 Entregado',
+      cancelled: '❌ Cancelado',
+    };
+    return labels[status] || status;
+  };
+
+  return (
+    <div>
+      <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+            <Bell className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-apple-dark">Historial de Notificaciones</h2>
+            <p className="text-sm text-apple-gray">Registro de todas las notificaciones enviadas a clientes</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-green-50 rounded-xl p-4">
+            <p className="text-sm text-green-600 font-medium">WhatsApp</p>
+            <p className="text-2xl font-bold text-green-700">
+              {notifications.filter(n => n.type === 'whatsapp').length}
+            </p>
+          </div>
+          <div className="bg-blue-50 rounded-xl p-4">
+            <p className="text-sm text-blue-600 font-medium">Email</p>
+            <p className="text-2xl font-bold text-blue-700">
+              {notifications.filter(n => n.type === 'email').length}
+            </p>
+          </div>
+          <div className="bg-purple-50 rounded-xl p-4">
+            <p className="text-sm text-purple-600 font-medium">Total</p>
+            <p className="text-2xl font-bold text-purple-700">{notifications.length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* EmailJS Config Status */}
+      <div className={`rounded-xl p-4 mb-6 ${isEmailConfigured() ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+        <div className="flex items-center gap-3">
+          {isEmailConfigured() ? (
+            <CheckCircle className="w-5 h-5 text-green-500" />
+          ) : (
+            <XCircle className="w-5 h-5 text-yellow-500" />
+          )}
+          <div>
+            <p className={`font-medium ${isEmailConfigured() ? 'text-green-700' : 'text-yellow-700'}`}>
+              {isEmailConfigured() ? 'EmailJS configurado correctamente' : 'EmailJS no configurado'}
+            </p>
+            <p className="text-xs text-apple-gray">
+              {isEmailConfigured()
+                ? 'Las notificaciones por email se envían automáticamente'
+                : 'Configura EmailJS en src/services/notificationService.ts para enviar emails'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div className="bg-white rounded-xl overflow-hidden shadow-sm">
+        {notifications.length === 0 ? (
+          <div className="p-12 text-center">
+            <Bell className="w-16 h-16 text-apple-gray mx-auto mb-4 opacity-50" />
+            <h3 className="text-xl font-semibold text-apple-dark mb-2">Sin notificaciones</h3>
+            <p className="text-apple-gray">Las notificaciones aparecerán aquí cuando cambies el estado de un pedido</p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {notifications.map((notification) => (
+              <div key={notification.id} className="p-4 flex items-center gap-4 hover:bg-gray-50">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  {getTypeIcon(notification.type)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm text-apple-dark">
+                      Pedido #{notification.orderId}
+                    </span>
+                    <span className="text-xs text-apple-gray">→</span>
+                    <span className="text-sm">{getStatusLabel(notification.status)}</span>
+                  </div>
+                  <p className="text-xs text-apple-gray">
+                    Enviado por {notification.type === 'whatsapp' ? 'WhatsApp' : 'Email'} ·{' '}
+                    {new Date(notification.timestamp).toLocaleString('es-VE')}
+                  </p>
+                </div>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  notification.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                }`}>
+                  {notification.success ? 'Enviado' : 'Error'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

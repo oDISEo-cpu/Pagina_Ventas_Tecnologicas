@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { Package, Calendar, DollarSign, CheckCircle, Clock, Truck, XCircle } from 'lucide-react';
+import { Package, Calendar, DollarSign, CheckCircle, Clock, Truck, XCircle, Bell } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useOrdersStore } from '../store/useOrdersStore';
 import { formatPrice } from '../lib/utils';
 import { Link } from 'react-router-dom';
+import { notificationService } from '../services/notificationService';
 
 export default function MyOrders() {
   const user = useAuthStore((state) => state.user);
@@ -134,6 +135,46 @@ export default function MyOrders() {
                   </div>
                 </div>
 
+                {/* Progress Timeline */}
+                {order.status !== 'cancelled' && (
+                  <div className="mb-4 pb-4 border-b">
+                    <div className="flex items-center justify-between">
+                      {['pending', 'confirmed', 'shipped', 'delivered'].map((step, i, arr) => {
+                        const stepIndex = arr.indexOf(order.status);
+                        const isActive = i <= stepIndex;
+                        const icons = [
+                          <Clock key="clock" className="w-4 h-4" />,
+                          <CheckCircle key="check1" className="w-4 h-4" />,
+                          <Truck key="truck" className="w-4 h-4" />,
+                          <Package key="package" className="w-4 h-4" />,
+                        ];
+                        const labels = ['Pedido', 'Confirmado', 'En camino', 'Entregado'];
+                        
+                        return (
+                          <div key={step} className="flex flex-col items-center flex-1 relative">
+                            {/* Line */}
+                            {i < arr.length - 1 && (
+                              <div className={`absolute top-4 left-1/2 w-full h-0.5 ${
+                                i < stepIndex ? 'bg-green-500' : 'bg-gray-200'
+                              }`} />
+                            )}
+                            {/* Circle */}
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                              isActive ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-400'
+                            }`}>
+                              {icons[i]}
+                            </div>
+                            {/* Label */}
+                            <span className={`text-xs mt-1 ${isActive ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                              {labels[i]}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Order Items */}
                 <div className="space-y-3">
                   {order.items.map((item, i) => (
@@ -169,6 +210,17 @@ export default function MyOrders() {
                   <div className="flex justify-between text-lg font-bold text-apple-dark pt-2">
                     <span>Total</span>
                     <span>{formatPrice(order.total)}</span>
+                  </div>
+                </div>
+
+                {/* Notification Info */}
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex items-start gap-2 bg-blue-50 rounded-lg p-3">
+                    <Bell className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-blue-700">
+                      Recibirás notificaciones por <strong>WhatsApp</strong> cuando el estado de tu pedido cambie. 
+                      Asegúrate de que tu número <strong>{order.userPhone}</strong> esté correcto.
+                    </p>
                   </div>
                 </div>
               </motion.div>
