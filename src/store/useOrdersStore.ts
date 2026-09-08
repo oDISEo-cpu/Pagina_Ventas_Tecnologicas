@@ -1,42 +1,48 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Order, OrderItem } from '../types';
+import { Order } from '../types';
+import { ordersService } from '../services/ordersService';
+
+export type { Order };
 
 interface OrdersState {
   orders: Order[];
-  addOrder: (order: Omit<Order, 'id' | 'createdAt'>) => void;
-  updateOrderStatus: (id: string, status: Order['status']) => void;
+  loading: boolean;
+  initialized: boolean;
+  initialize: () => Promise<void>;
+  addOrder: (orderData: Omit<Order, 'id' | 'createdAt'>) => Promise<Order>;
+  updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
   getUserOrders: (userId: string) => Order[];
 }
 
-export type { Order } from '../types';
+export const useOrdersStore = create<OrdersState>()((set, get) => ({
+  orders: [],
+  loading: false,
+  initialized: false,
 
-export const useOrdersStore = create<OrdersState>()(
-  persist(
-    (set, get) => ({
-      orders: [],
+  initialize: async () => {
+    if (get().initialized) return;
+    
+    set({ loading: true });
+    const orders = await ordersService.getAll();
+    set({ orders, loading: false, initialized: true });
+  },
 
-      addOrder: (orderData) => {
-        const newOrder: Order = {
-          ...orderData,
-          id: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          createdAt: new Date().toISOString(),
-        };
-        set((state) => ({ orders: [newOrder, ...state.orders] }));
-      },
+  addOrder: async (orderData) => {
+    const newOrder = await ordersService.add(orderData);
+    set((state) => ({ orders: [...state.orders, newOrder] }));
+    return newOrder;
+  },
 
-      updateOrderStatus: (id, status) => {
-        set((state) => ({
-          orders: state.orders.map((order) =>
-            order.id === id ? { ...order, status } : order
-          ),
-        }));
-      },
+  updateOrderStatus: async (orderId, status) => {
+    await ordersService.updateStatus(orderId, status);
+    set((state) => ({
+      orders: state.orders.map((o) =>
+        o.id === orderId ? { ...o, status } : o
+      ),
+    }));
+  },
 
-      getUserOrders: (userId) => {
-        return get().orders.filter((order) => order.userId === userId);
-      },
-    }),
-    { name: 'iphonelecheria-orders' }
-  )
-);
+  getUserOrders: (userId) => {
+    return get().orders.filter((o) => o.userId === userId);
+  },
+}));

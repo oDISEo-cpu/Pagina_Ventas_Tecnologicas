@@ -18,7 +18,7 @@ export default function CartDrawer() {
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('Zelle');
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!isAuthenticated || !user) {
       closeCart();
       return;
@@ -31,7 +31,7 @@ export default function CartDrawer() {
       price: item.product.price,
     }));
 
-    addOrder({
+    await addOrder({
       userId: user.id,
       userName: user.name,
       userEmail: user.email,

@@ -18,10 +18,7 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    // Simular delay de red
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const result = login(email, password);
+    const result = await login(email, password);
     setLoading(false);
 
     if (result.success) {

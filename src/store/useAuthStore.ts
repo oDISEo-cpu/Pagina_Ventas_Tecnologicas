@@ -1,109 +1,52 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '../types';
-
-interface StoredUser extends User {
-  password: string;
-}
+import { authService } from '../services/authService';
 
 interface AuthState {
   user: User | null;
   users: User[];
   isAuthenticated: boolean;
-  login: (email: string, password: string) => { success: boolean; message: string };
-  register: (name: string, email: string, phone: string, password: string) => { success: boolean; message: string };
-  logout: () => void;
-  refreshUsers: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (name: string, email: string, phone: string, password: string) => Promise<{ success: boolean; message: string }>;
+  logout: () => Promise<void>;
+  loadUsers: () => void;
 }
-
-const USERS_KEY = 'iphonelecheria-users';
-
-const getStoredUsers = (): StoredUser[] => {
-  try {
-    const stored = localStorage.getItem(USERS_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  
-  // Default admin user
-  const defaultAdmin: StoredUser = {
-    id: 'admin-001',
-    name: 'Administrador',
-    email: 'admin@iphonelecheria.com',
-    phone: '0414-8808810',
-    role: 'admin',
-    password: 'admin123',
-    createdAt: new Date().toISOString(),
-  };
-  
-  const defaults = [defaultAdmin];
-  localStorage.setItem(USERS_KEY, JSON.stringify(defaults));
-  return defaults;
-};
-
-const saveUsers = (users: StoredUser[]) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-};
-
-const toPublicUser = (stored: StoredUser): User => {
-  const { password: _, ...user } = stored;
-  return user;
-};
-
-const getPublicUsers = (): User[] => {
-  return getStoredUsers().map(toPublicUser);
-};
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      users: getPublicUsers(),
+      users: [],
       isAuthenticated: false,
 
-      login: (email, password) => {
-        const users = getStoredUsers();
-        const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-        
-        if (found) {
-          const publicUser = toPublicUser(found);
-          set({ user: publicUser, isAuthenticated: true, users: getPublicUsers() });
-          return { success: true, message: 'Inicio de sesión exitoso' };
+      login: async (email, password) => {
+        const result = await authService.login(email, password);
+        if (result.success && result.user) {
+          set({ user: result.user, isAuthenticated: true });
         }
-        
-        return { success: false, message: 'Email o contraseña incorrectos' };
+        return { success: result.success, message: result.message };
       },
 
-      register: (name, email, phone, password) => {
-        const users = getStoredUsers();
-        
-        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-          return { success: false, message: 'Este email ya está registrado' };
+      register: async (name, email, phone, password) => {
+        const result = await authService.register(name, email, phone, password);
+        if (result.success && result.user) {
+          set({ user: result.user, isAuthenticated: true });
+          // Recargar lista de usuarios
+          get().loadUsers();
         }
-
-        const newUser: StoredUser = {
-          id: `user-${Date.now()}`,
-          name,
-          email,
-          phone,
-          role: 'user',
-          password,
-          createdAt: new Date().toISOString(),
-        };
-
-        users.push(newUser);
-        saveUsers(users);
-
-        const publicUser = toPublicUser(newUser);
-        set({ user: publicUser, isAuthenticated: true, users: getPublicUsers() });
-        return { success: true, message: 'Cuenta creada exitosamente' };
+        return { success: result.success, message: result.message };
       },
 
-      logout: () => {
+      logout: async () => {
+        await authService.logout();
         set({ user: null, isAuthenticated: false });
       },
 
-      refreshUsers: () => {
-        set({ users: getPublicUsers() });
+      loadUsers: () => {
+        // Solo cargar usuarios desde localStorage (para panel admin)
+        const users = JSON.parse(localStorage.getItem('iphonelecheria-users') || '[]');
+        set({ users });
       },
     }),
     {
@@ -112,11 +55,6 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          state.refreshUsers();
-        }
-      },
     }
   )
 );

@@ -1,75 +1,53 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { Product } from '../types';
-import { products as initialProducts } from '../lib/products';
+import { productsService } from '../services/productsService';
 
 interface ProductsState {
   products: Product[];
+  loading: boolean;
   initialized: boolean;
-  initialize: () => void;
-  addProduct: (product: Omit<Product, 'id' | 'slug'>) => void;
-  updateProduct: (id: number, data: Partial<Product>) => void;
-  deleteProduct: (id: number) => void;
-  getProductBySlug: (slug: string) => Product | undefined;
+  initialize: () => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'slug'>) => Promise<void>;
+  updateProduct: (id: number, data: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: number) => Promise<void>;
+  uploadImage: (file: File, productId?: number) => Promise<string>;
 }
 
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .substring(0, 50);
-}
+export const useProductsStore = create<ProductsState>()((set, get) => ({
+  products: [],
+  loading: false,
+  initialized: false,
 
-export const useProductsStore = create<ProductsState>()(
-  persist(
-    (set, get) => ({
-      products: [],
-      initialized: false,
+  initialize: async () => {
+    if (get().initialized) return;
+    
+    set({ loading: true });
+    const products = await productsService.getAll();
+    set({ products, loading: false, initialized: true });
+  },
 
-      initialize: () => {
-        if (!get().initialized) {
-          set({ products: initialProducts, initialized: true });
-        }
-      },
+  addProduct: async (productData) => {
+    const newProduct = await productsService.add(productData);
+    set((state) => ({ products: [...state.products, newProduct] }));
+  },
 
-      addProduct: (productData) => {
-        const products = get().products;
-        const maxId = products.reduce((max, p) => Math.max(max, p.id), 0);
-        const newProduct: Product = {
-          ...productData as Product,
-          id: maxId + 1,
-          slug: generateSlug(productData.name),
-        };
-        set({ products: [...products, newProduct] });
-      },
+  updateProduct: async (id, data) => {
+    await productsService.update(id, data);
+    set((state) => ({
+      products: state.products.map((p) =>
+        p.id === id ? { ...p, ...data } : p
+      ),
+    }));
+  },
 
-      updateProduct: (id, data) => {
-        set((state) => ({
-          products: state.products.map((p) =>
-            p.id === id ? { ...p, ...data, slug: data.name ? generateSlug(data.name) : p.slug } : p
-          ),
-        }));
-      },
+  deleteProduct: async (id) => {
+    await productsService.delete(id);
+    set((state) => ({
+      products: state.products.filter((p) => p.id !== id),
+    }));
+  },
 
-      deleteProduct: (id) => {
-        set((state) => ({
-          products: state.products.filter((p) => p.id !== id),
-        }));
-      },
-
-      getProductBySlug: (slug) => {
-        return get().products.find((p) => p.slug === slug);
-      },
-    }),
-    {
-      name: 'iphonelecheria-products',
-      // Only persist if initialized
-      partialize: (state) => ({
-        products: state.products,
-        initialized: state.initialized,
-      }),
-    }
-  )
-);
+  uploadImage: async (file, productId) => {
+    return await productsService.uploadImage(file, productId);
+  },
+}));

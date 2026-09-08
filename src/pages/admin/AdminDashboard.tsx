@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Package, Users, ShoppingBag, Plus, Edit3, Trash2,
   CheckCircle, Clock, Truck, XCircle, Search, DollarSign,
-  Image, Save, ArrowLeft, Eye
+  Image, Save, ArrowLeft, Eye, X
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useOrdersStore, Order } from '../../store/useOrdersStore';
@@ -220,7 +220,7 @@ function OrderCard({ order, onUpdateStatus, getStatusColor, getStatusLabel }: {
       {expanded && (
         <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t pt-4">
           <div className="space-y-3">
-            {order.items.map((item, i) => (
+            {order.items.map((item: any, i: number) => (
               <div key={i} className="flex items-center gap-3">
                 <img src={item.product.image} alt={item.product.name} className="w-12 h-12 rounded-lg object-cover" />
                 <div className="flex-1">
@@ -355,7 +355,9 @@ function ProductsPanel() {
 function ProductForm({ product, onBack }: { product?: Product; onBack: () => void }) {
   const addProduct = useProductsStore((state) => state.addProduct);
   const updateProduct = useProductsStore((state) => state.updateProduct);
+  const uploadImage = useProductsStore((state) => state.uploadImage);
   const isEditing = !!product;
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -380,7 +382,23 @@ function ProductForm({ product, onBack }: { product?: Product; onBack: () => voi
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const imageUrl = await uploadImage(file, product?.id);
+      setFormData((prev) => ({ ...prev, image: imageUrl }));
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      alert('Error al subir la imagen. Intenta de nuevo.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const productData = {
       ...formData,
@@ -389,9 +407,9 @@ function ProductForm({ product, onBack }: { product?: Product; onBack: () => voi
     };
 
     if (isEditing && product) {
-      updateProduct(product.id, productData);
+      await updateProduct(product.id, productData);
     } else {
-      addProduct(productData);
+      await addProduct(productData);
     }
     onBack();
   };
@@ -529,24 +547,88 @@ function ProductForm({ product, onBack }: { product?: Product; onBack: () => voi
               />
             </div>
 
-            {/* Image URL */}
+            {/* Image */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-apple-dark mb-2">
                 <Image className="w-4 h-4 inline mr-1" />
-                URL de Imagen *
+                Imagen del Producto *
               </label>
+              
+              {/* Tabs para URL o Importar */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    !formData.image.startsWith('data:') && !formData.image.startsWith('blob:')
+                      ? 'bg-apple-blue text-white'
+                      : 'bg-gray-100 text-apple-dark hover:bg-gray-200'
+                  }`}
+                >
+                  URL
+                </button>
+                <button
+                  type="button"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    formData.image.startsWith('data:') || formData.image.startsWith('blob:')
+                      ? 'bg-apple-blue text-white'
+                      : 'bg-gray-100 text-apple-dark hover:bg-gray-200'
+                  }`}
+                >
+                  Importar Imagen
+                </button>
+              </div>
+
+              {/* Input de URL */}
               <input
                 type="url"
                 name="image"
-                value={formData.image}
+                value={formData.image.startsWith('data:') || formData.image.startsWith('blob:') ? '' : formData.image}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-apple-blue"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-apple-blue mb-3"
                 placeholder="https://ejemplo.com/imagen.jpg"
-                required
               />
+
+              {/* Input de archivo */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-apple-blue hover:bg-blue-50 transition-all"
+                >
+                  {uploading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-apple-blue border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm text-apple-gray">Subiendo imagen...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 text-apple-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-sm text-apple-gray">Click para importar imagen desde tu dispositivo</span>
+                    </>
+                  )}
+                </label>
+              </div>
+
+              {/* Preview */}
               {formData.image && (
-                <div className="mt-3">
-                  <img src={formData.image} alt="Preview" className="w-24 h-24 object-cover rounded-xl border" />
+                <div className="mt-3 relative inline-block">
+                  <img src={formData.image} alt="Preview" className="w-32 h-32 object-cover rounded-xl border-2 border-gray-200" />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>

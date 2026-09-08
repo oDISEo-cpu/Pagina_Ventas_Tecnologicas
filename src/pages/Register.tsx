@@ -37,9 +37,8 @@ export default function Register() {
     }
 
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const result = register(
+    const result = await register(
       formData.name,
       formData.email,
       formData.phone,

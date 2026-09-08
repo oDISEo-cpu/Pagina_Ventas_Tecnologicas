@@ -13,16 +13,22 @@ import Register from './pages/Register';
 import MyOrders from './pages/MyOrders';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import { useProductsStore } from './store/useProductsStore';
+import { useOrdersStore } from './store/useOrdersStore';
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
-  const initialize = useProductsStore((state) => state.initialize);
-  const initialized = useProductsStore((state) => state.initialized);
+  const initializeProducts = useProductsStore((state) => state.initialize);
+  const productsInitialized = useProductsStore((state) => state.initialized);
+  const initializeOrders = useOrdersStore((state) => state.initialize);
+  const ordersInitialized = useOrdersStore((state) => state.initialized);
 
   useEffect(() => {
-    if (!initialized) {
-      initialize();
+    if (!productsInitialized) {
+      initializeProducts();
     }
-  }, [initialized, initialize]);
+    if (!ordersInitialized) {
+      initializeOrders();
+    }
+  }, [productsInitialized, ordersInitialized, initializeProducts, initializeOrders]);
 
   return <>{children}</>;
 }
