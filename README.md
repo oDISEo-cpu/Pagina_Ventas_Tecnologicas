@@ -1,169 +1,97 @@
-# iPhoneLechería - E-commerce App
+# 🍎 iPhoneLechería - E-commerce Apple Venezuela
 
-## 🚀 Configuración de Firebase
+Aplicación web completa de e-commerce para iPhoneLechería, una tienda de productos Apple en Lechería, Venezuela.
 
-La aplicación está preparada para usar **Firebase** como base de datos real. Si Firebase no está configurado, funciona con localStorage como fallback.
+## 🌟 Características
 
-### Paso 1: Crear proyecto en Firebase
-
-1. Ve a [Firebase Console](https://console.firebase.google.com/)
-2. Click en "Agregar proyecto"
-3. Nombra tu proyecto (ej: "iphonelecheria")
-4. Desactiva Google Analytics (opcional)
-5. Click en "Crear proyecto"
-
-### Paso 2: Configurar Authentication
-
-1. En el menú lateral, ve a **Authentication**
-2. Click en "Comenzar"
-3. En la pestaña "Sign-in method", habilita **Email/Password**
-
-### Paso 3: Configurar Firestore Database
-
-1. En el menú lateral, ve a **Firestore Database**
-2. Click en "Crear base de datos"
-3. Selecciona "Comenzar en modo de prueba" (puedes cambiar las reglas después)
-4. Elige la ubicación más cercana (ej: `southamerica-east1` para Venezuela)
-
-### Paso 4: Configurar Storage (para imágenes)
-
-1. En el menú lateral, ve a **Storage**
-2. Click en "Comenzar"
-3. Acepta las reglas por defecto (modo prueba)
-4. Click en "Listo"
-
-### Paso 5: Obtener credenciales
-
-1. Click en el ícono de engranaje ⚙️ (arriba a la izquierda)
-2. Selecciona "Configuración del proyecto"
-3. Baja hasta "Tus apps"
-4. Click en el ícono de web `</>`
-5. Registra tu app con un nombre (ej: "iPhoneLechería Web")
-6. Copia las credenciales que aparecen
-
-### Paso 6: Configurar la aplicación
-
-Abre el archivo `src/lib/firebase.ts` y reemplaza los valores:
-
-```typescript
-const firebaseConfig = {
-  apiKey: "AIzaSy...", // Tu API Key
-  authDomain: "tu-proyecto.firebaseapp.com",
-  projectId: "tu-proyecto-id",
-  storageBucket: "tu-proyecto.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abc123"
-};
-```
-
-### Paso 7: Crear usuario administrador
-
-Después de configurar Firebase, necesitas crear el usuario administrador manualmente:
-
-1. Ve a **Authentication** > **Users**
-2. Click en "Agregar usuario"
-3. Email: `admin@iphonelecheria.com`
-4. Contraseña: `admin123` (o la que prefieras)
-5. Click en "Agregar usuario"
-
-Luego, en **Firestore Database**:
-1. Crea una colección llamada `users`
-2. Agrega un documento con el ID igual al UID del usuario que creaste
-3. Agrega estos campos:
-   - `name`: "Administrador"
-   - `email`: "admin@iphonelecheria.com"
-   - `phone`: "0414-8808810"
-   - `role`: "admin"
-   - `createdAt`: timestamp actual
-
----
-
-## 📦 Estructura del Proyecto
-
-```
-src/
-├── components/          # Componentes reutilizables
-│   ├── cart/           # Carrito de compras
-│   ├── home/           # Componentes de la página principal
-│   ├── layout/         # Header, Footer, WhatsApp
-│   └── products/       # Cards y filtros de productos
-├── lib/                # Utilidades y configuración
-│   ├── firebase.ts     # Configuración de Firebase
-│   ├── constants.ts    # Constantes del negocio
-│   ├── products.ts     # Productos iniciales
-│   └── utils.ts        # Funciones auxiliares
-├── pages/              # Páginas de la aplicación
-│   ├── admin/          # Panel de administración
-│   ├── Home.tsx
-│   ├── Products.tsx
-│   ├── Services.tsx
-│   ├── Contact.tsx
-│   ├── Login.tsx
-│   ├── Register.tsx
-│   └── MyOrders.tsx
-├── services/           # Servicios con Firebase/localStorage
-│   ├── authService.ts
-│   ├── productsService.ts
-│   └── ordersService.ts
-├── store/              # Estados globales (Zustand)
-│   ├── useAuthStore.ts
-│   ├── useCartStore.ts
-│   ├── useOrdersStore.ts
-│   └── useProductsStore.ts
-└── types/              # Tipos TypeScript
-    └── index.ts
-```
-
----
-
-## 🔐 Credenciales de Acceso
-
-### Sin Firebase (localStorage):
-- **Admin**: admin@iphonelecheria.com / admin123
-
-### Con Firebase:
-- **Admin**: El que creaste manualmente en Firebase Authentication
-
----
-
-## 🎯 Características
-
-### Para Clientes:
+### Para Clientes
+- ✅ Catálogo de productos con filtros avanzados
+- ✅ Carrito de compras con persistencia
 - ✅ Registro e inicio de sesión
-- ✅ Catálogo de productos con filtros
-- ✅ Carrito de compras
-- ✅ Historial de pedidos
-- ✅ Checkout con envío por WhatsApp
+- ✅ Historial de pedidos con timeline visual
+- ✅ Notificaciones por WhatsApp
+- ✅ Modo oscuro/claro
+- ✅ Diseño responsive (mobile-first)
 
-### Para Administradores:
+### Para Administradores
 - ✅ Panel de administración completo
 - ✅ Gestión de productos (agregar, editar, eliminar)
-- ✅ **Importar imágenes desde dispositivo** o usar URLs
-- ✅ Gestión de pedidos (ver, cambiar estado)
-- ✅ Gestión de usuarios registrados
+- ✅ Importar imágenes desde dispositivo
+- ✅ Gestión de pedidos con cambio de estado
+- ✅ Notificaciones automáticas a clientes
+- ✅ Historial de notificaciones
+- ✅ Gestión de usuarios
+- ✅ Galería de Instagram editable
 - ✅ Estadísticas de ventas
 
----
+## 🛠️ Tecnologías
 
-## 💾 Almacenamiento de Datos
+- **Frontend:** React + TypeScript + Vite
+- **Estilos:** Tailwind CSS
+- **Animaciones:** Framer Motion
+- **Estado:** Zustand
+- **Routing:** React Router
+- **Backend:** Firebase (Auth, Firestore, Storage, Hosting)
+- **Iconos:** Lucide React
+- **Formularios:** React Hook Form + Zod
 
-### Con Firebase (Recomendado):
-- **Usuarios**: Firestore collection `users`
-- **Productos**: Firestore collection `products`
-- **Pedidos**: Firestore collection `orders`
-- **Imágenes**: Firebase Storage bucket `products/`
+## 📦 Instalación
 
-### Sin Firebase (Fallback):
-- Todo se guarda en `localStorage` del navegador
-- Los datos son locales y no se comparten entre dispositivos
-- ⚠️ No recomendado para producción
+```bash
+# Clonar repositorio
+git clone <url>
 
----
+# Instalar dependencias
+npm install
 
-## 🚀 Despliegue
+# Ejecutar en desarrollo
+npm run dev
 
-### Opción 1: Firebase Hosting (Recomendado)
+# Construir para producción
+npm run build
+```
 
+## 🔥 Configuración Firebase
+
+### Guía Rápida (10 minutos)
+
+1. **Crear proyecto en Firebase**
+   - Ve a https://console.firebase.google.com/
+   - Crea un proyecto llamado `iphonelecheria`
+
+2. **Habilitar servicios**
+   - Authentication (Email/Password)
+   - Firestore Database
+   - Storage
+
+3. **Obtener credenciales**
+   - Configuración del proyecto → Tus aplicaciones → Web
+   - Copia el objeto `firebaseConfig`
+
+4. **Configurar la app**
+   - Abre `src/lib/firebase.ts`
+   - Reemplaza las credenciales con las tuyas
+
+5. **Crear usuario admin**
+   - Authentication → Users → Agregar usuario
+   - Email: `admin@iphonelecheria.com`
+   - Contraseña: `admin123`
+   - En Firestore → users → agrega el documento con `role: "admin"`
+
+6. **Desplegar**
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   npm run build
+   firebase deploy
+   ```
+
+📖 **Guía completa:** `FIREBASE_SETUP.md`
+📖 **Guía rápida:** `GUIA_RAPIDA.md`
+
+## 🌐 Despliegue
+
+### Firebase Hosting (Recomendado)
 ```bash
 # Instalar Firebase CLI
 npm install -g firebase-tools
@@ -171,97 +99,223 @@ npm install -g firebase-tools
 # Iniciar sesión
 firebase login
 
-# Inicializar hosting
-firebase init hosting
-
-# Configurar:
-# - Public directory: dist
-# - Single-page app: Yes
-# - GitHub deploys: No
-
 # Construir y desplegar
 npm run build
 firebase deploy
 ```
 
-### Opción 2: Vercel
+Tu app estará en: `https://iphonelecheria.web.app`
 
-```bash
-# Instalar Vercel CLI
-npm i -g vercel
+### Dominio Personalizado
+Puedes agregar un dominio propio como `iphonelecheria.com` siguiendo la guía en `FIREBASE_SETUP.md`
 
-# Desplegar
-vercel
+## 🔐 Credenciales de Prueba
+
+**Administrador:**
+- Email: `admin@iphonelecheria.com`
+- Contraseña: `admin123`
+
+## 📱 Funcionalidades Principales
+
+### Catálogo de Productos
+- 18 productos de referencia precargados
+- Filtros por categoría, precio, condición
+- Búsqueda en tiempo real
+- Tarjetas con hover effects
+
+### Carrito de Compras
+- Persistencia en localStorage/Firebase
+- Cálculo automático de totales
+- Checkout con múltiples métodos de pago
+- Envío de pedido por WhatsApp al admin
+
+### Sistema de Notificaciones
+- Notificaciones por WhatsApp al cambiar estado
+- Notificaciones por email (requiere EmailJS)
+- Timeline visual de progreso del pedido
+- Historial de notificaciones
+
+### Panel Admin
+- Gestión completa de productos
+- Importar imágenes desde dispositivo
+- Cambio de estado de pedidos
+- Notificación automática a clientes
+- Gestión de usuarios
+- Galería de Instagram editable
+- Estadísticas de ventas
+
+## 📂 Estructura del Proyecto
+
 ```
-
-### Opción 3: Netlify
-
-```bash
-# Instalar Netlify CLI
-npm i -g netlify-cli
-
-# Construir y desplegar
-npm run build
-netlify deploy --prod
+iphonelecheria-web/
+├── src/
+│   ├── components/
+│   │   ├── cart/          # Carrito de compras
+│   │   ├── home/          # Componentes de inicio
+│   │   ├── layout/        # Header, Footer, WhatsApp
+│   │   └── products/      # Tarjetas y filtros
+│   ├── lib/
+│   │   ├── constants.ts   # Constantes del negocio
+│   │   ├── firebase.ts    # Configuración Firebase
+│   │   ├── products.ts    # Productos de referencia
+│   │   └── utils.ts       # Utilidades
+│   ├── pages/
+│   │   ├── admin/         # Panel de administración
+│   │   ├── Home.tsx       # Página de inicio
+│   │   ├── Products.tsx   # Catálogo
+│   │   ├── Services.tsx   # Servicios
+│   │   ├── Contact.tsx    # Contacto
+│   │   ├── Login.tsx      # Inicio de sesión
+│   │   ├── Register.tsx   # Registro
+│   │   └── MyOrders.tsx   # Mis pedidos
+│   ├── services/
+│   │   ├── authService.ts       # Autenticación
+│   │   ├── ordersService.ts     # Pedidos
+│   │   ├── productsService.ts   # Productos
+│   │   └── notificationService.ts # Notificaciones
+│   ├── store/
+│   │   ├── useAuthStore.ts      # Estado de autenticación
+│   │   ├── useCartStore.ts      # Estado del carrito
+│   │   ├── useOrdersStore.ts    # Estado de pedidos
+│   │   ├── useProductsStore.ts  # Estado de productos
+│   │   ├── useThemeStore.ts     # Estado del tema
+│   │   └── useInstagramStore.ts # Estado de Instagram
+│   ├── types/
+│   │   └── index.ts       # Tipos TypeScript
+│   ├── App.tsx            # Componente principal
+│   └── main.tsx           # Punto de entrada
+├── public/                # Archivos estáticos
+├── firebase.json          # Configuración Firebase Hosting
+├── .firebaserc            # Configuración de proyecto Firebase
+├── FIREBASE_SETUP.md      # Guía completa de Firebase
+├── GUIA_RAPIDA.md         # Guía rápida de Firebase
+└── package.json           # Dependencias
 ```
-
----
-
-## 🛠️ Tecnologías
-
-- **React 18** + **TypeScript**
-- **Vite** (build tool)
-- **Tailwind CSS** (estilos)
-- **React Router** (navegación)
-- **Zustand** (estado global)
-- **Firebase** (backend opcional)
-  - Authentication
-  - Firestore Database
-  - Storage
-
----
-
-## 📱 Responsive
-
-La aplicación es 100% responsive y funciona en:
-- 📱 Móviles (320px+)
-- 📱 Tablets (768px+)
-- 💻 Laptops (1024px+)
-- 🖥️ Desktop (1280px+)
-
----
 
 ## 🎨 Personalización
 
-### Cambiar colores
-Edita `src/index.css` y modifica las variables de Tailwind:
-```css
-@theme {
-  --color-apple-blue: #0071E3;
-  --color-apple-gray: #86868B;
-  /* ... */
-}
-```
-
-### Cambiar información del negocio
+### Datos del Negocio
 Edita `src/lib/constants.ts`:
 ```typescript
 export const BUSINESS_INFO = {
   name: 'iPhoneLechería',
-  address: 'Tu dirección aquí',
-  phones: ['Tu teléfono'],
-  // ...
+  instagram: '@iphonelecheria.st',
+  address: 'Tu dirección',
+  phones: ['0414-8808810'],
+  whatsapp: '584148808810',
+  // ... más datos
 };
 ```
 
----
+### Productos de Referencia
+Edita `src/lib/products.ts` para cambiar los productos iniciales.
+
+### Colores
+Edita `src/index.css` para cambiar la paleta de colores.
+
+## 📊 Base de Datos
+
+### Colecciones Firestore
+
+#### `users`
+```typescript
+{
+  id: string,
+  name: string,
+  email: string,
+  phone: string,
+  cedula: string,
+  role: 'user' | 'admin',
+  createdAt: string
+}
+```
+
+#### `products`
+```typescript
+{
+  id: number,
+  name: string,
+  slug: string,
+  category: string,
+  price: number,
+  image: string,
+  // ... más campos
+}
+```
+
+#### `orders`
+```typescript
+{
+  id: string,
+  userId: string,
+  userName: string,
+  userEmail: string,
+  userPhone: string,
+  userCedula: string,
+  items: OrderItem[],
+  total: number,
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled',
+  createdAt: string
+}
+```
+
+## 🔒 Seguridad
+
+### Reglas de Firestore (Producción)
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+    match /orders/{orderId} {
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && isAdmin();
+    }
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}
+```
+
+## 📱 Screenshots
+
+- Página de inicio con hero carousel
+- Catálogo de productos con filtros
+- Carrito de compras
+- Panel de administración
+- Timeline de pedidos
+- Modo oscuro/claro
+
+## 🚀 Próximas Mejoras
+
+- [ ] Integración con pasarela de pago
+- [ ] Sistema de reseñas y calificaciones
+- [ ] Chat en vivo con clientes
+- [ ] Programa de lealtad/puntos
+- [ ] Cupones de descuento
+- [ ] Blog/Noticias
+- [ ] Integración con redes sociales
+- [ ] App móvil (React Native)
 
 ## 📞 Soporte
 
-Si necesitas ayuda configurando Firebase o personalizando la aplicación, contacta al desarrollador.
+Para soporte técnico o consultas:
+- Email: admin@iphonelecheria.com
+- WhatsApp: 0414-8808810
+- Instagram: @iphonelecheria.st
+
+## 📄 Licencia
+
+Este proyecto fue desarrollado para iPhoneLechería. Todos los derechos reservados.
 
 ---
 
-## 📝 Licencia
-
-Este proyecto fue creado para iPhoneLechería. Todos los derechos reservados.
+**Desarrollado con ❤️ para iPhoneLechería** 🍎
