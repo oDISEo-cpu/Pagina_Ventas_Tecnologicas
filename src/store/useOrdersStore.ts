@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Order } from '../types';
-import { ordersService } from '../services/ordersService';
+import { supabaseOrdersService } from '../services/supabaseOrdersService';
 
 export type { Order };
 
@@ -26,18 +26,18 @@ export const useOrdersStore = create<OrdersState>()(
         if (get().initialized) return;
         
         set({ loading: true });
-        const orders = await ordersService.getAll();
+        const orders = await supabaseOrdersService.getAll();
         set({ orders, loading: false, initialized: true });
       },
 
       addOrder: async (orderData) => {
-        const newOrder = await ordersService.add(orderData);
+        const newOrder = await supabaseOrdersService.add(orderData);
         set((state) => ({ orders: [...state.orders, newOrder] }));
         return newOrder;
       },
 
       updateOrderStatus: async (orderId, status) => {
-        await ordersService.updateStatus(orderId, status);
+        await supabaseOrdersService.updateStatus(orderId, status);
         set((state) => ({
           orders: state.orders.map((o) =>
             o.id === orderId ? { ...o, status } : o
@@ -51,6 +51,10 @@ export const useOrdersStore = create<OrdersState>()(
     }),
     {
       name: 'iphonelecheria-orders',
+      partialize: (state) => ({
+        orders: state.orders,
+        initialized: state.initialized,
+      }),
     }
   )
 );

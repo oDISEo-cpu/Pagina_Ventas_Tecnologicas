@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Product } from '../types';
-import { productsService } from '../services/productsService';
+import { supabaseProductsService } from '../services/supabaseProductsService';
 import { products as initialProducts } from '../lib/products';
 
 interface ProductsState {
@@ -26,17 +26,17 @@ export const useProductsStore = create<ProductsState>()(
         if (get().initialized) return;
         
         set({ loading: true });
-        const products = await productsService.getAll();
+        const products = await supabaseProductsService.getAll();
         set({ products, loading: false, initialized: true });
       },
 
       addProduct: async (productData) => {
-        const newProduct = await productsService.add(productData);
+        const newProduct = await supabaseProductsService.add(productData);
         set((state) => ({ products: [...state.products, newProduct] }));
       },
 
       updateProduct: async (id, data) => {
-        await productsService.update(id, data);
+        await supabaseProductsService.update(id, data);
         set((state) => ({
           products: state.products.map((p) =>
             p.id === id ? { ...p, ...data } : p
@@ -45,14 +45,14 @@ export const useProductsStore = create<ProductsState>()(
       },
 
       deleteProduct: async (id) => {
-        await productsService.delete(id);
+        await supabaseProductsService.delete(id);
         set((state) => ({
           products: state.products.filter((p) => p.id !== id),
         }));
       },
 
       uploadImage: async (file, productId) => {
-        return await productsService.uploadImage(file, productId);
+        return await supabaseProductsService.uploadImage(file, productId);
       },
     }),
     {
