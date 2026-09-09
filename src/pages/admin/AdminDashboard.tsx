@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package, Users, ShoppingBag, Plus, Edit3, Trash2,
@@ -94,7 +94,13 @@ export default function AdminDashboard() {
 function OrdersPanel() {
   const orders = useOrdersStore((state) => state.orders);
   const updateOrderStatus = useOrdersStore((state) => state.updateOrderStatus);
+  const initializeOrders = useOrdersStore((state) => state.initialize);
   const [filterStatus, setFilterStatus] = useState('all');
+
+  // Cargar pedidos cuando se monta el componente
+  useEffect(() => {
+    initializeOrders();
+  }, [initializeOrders]);
 
   const filteredOrders = filterStatus === 'all'
     ? orders
@@ -425,9 +431,15 @@ function OrderCard({ order, onUpdateStatus, getStatusColor, getStatusLabel }: {
 function ProductsPanel() {
   const products = useProductsStore((state) => state.products);
   const deleteProduct = useProductsStore((state) => state.deleteProduct);
+  const initializeProducts = useProductsStore((state) => state.initialize);
   const [search, setSearch] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Cargar productos cuando se monta el componente
+  useEffect(() => {
+    initializeProducts();
+  }, [initializeProducts]);
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -883,6 +895,12 @@ function ProductForm({ product, onBack }: { product?: Product; onBack: () => voi
 function UsersPanel() {
   const users = useAuthStore((state) => state.users);
   const orders = useOrdersStore((state) => state.orders);
+  const loadUsers = useAuthStore((state) => state.loadUsers);
+
+  // Cargar usuarios cuando se monta el componente
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   return (
     <div>
