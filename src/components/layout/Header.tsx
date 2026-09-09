@@ -55,13 +55,8 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform" style={{ background: '#000', border: '2px solid #FFD700', boxShadow: '0 0 8px rgba(255, 215, 0, 0.5)' }}>
-              <svg viewBox="0 0 100 100" className="w-5 h-5">
-                <path d="M 50,20 C 35,20 22,32 22,48 C 22,64 32,80 42,88 C 46,91 49,92 50,92 C 51,92 54,91 58,88 C 68,80 78,64 78,48 C 78,32 65,20 50,20 Z" fill="white"/>
-                <circle cx="68" cy="48" r="10" fill="black"/>
-                <path d="M 50,20 C 52,14 56,10 62,8 C 60,14 56,18 50,20 Z" fill="white"/>
-                <path d="M 50,20 C 50,16 51,12 52,10 C 51,12 50,16 50,20 Z" fill="white" stroke="white" strokeWidth="1"/>
-              </svg>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform bg-gradient-to-br from-[#FF2D78] to-[#FF6B35] shadow-lg shadow-pink-500/30">
+              <Apple className="w-5 h-5 text-white" fill="currentColor" strokeWidth={1} />
             </div>
             <span className="font-bold text-lg text-apple-dark dark:text-white hidden sm:block">
               iPhone<span className="text-apple-blue">Lechería</span>

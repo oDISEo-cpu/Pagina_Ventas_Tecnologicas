@@ -29,7 +29,7 @@ export const authService = {
 
         const { error: dbError } = await supabase
           .from('users')
-          .insert([userData]);
+          .upsert(userData, { onConflict: 'id' });
 
         if (dbError) throw dbError;
 
