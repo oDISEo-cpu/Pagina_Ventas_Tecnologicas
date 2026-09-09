@@ -74,8 +74,8 @@ npm run build
 
 5. **Crear usuario admin**
    - Authentication → Users → Agregar usuario
-   - Email: `admin@iphonelecheria.com`
-   - Contraseña: `admin123`
+   - Email: `crea algún correo para usarlo como Administrador`
+   - Contraseña: `cualquier contraseña con 6 o más caracteres funciona`
    - En Firestore → users → agrega el documento con `role: "admin"`
 
 6. **Desplegar**
@@ -112,8 +112,8 @@ Puedes agregar un dominio propio como `iphonelecheria.com` siguiendo la guía en
 ## 🔐 Credenciales de Prueba
 
 **Administrador:**
-- Email: `admin@iphonelecheria.com`
-- Contraseña: `admin123`
+- Email: `El correo que se creo anteriormente`
+- Contraseña: `La contraseña creada`
 
 ## 📱 Funcionalidades Principales
 
