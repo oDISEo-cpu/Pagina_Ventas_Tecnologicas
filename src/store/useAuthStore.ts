@@ -43,9 +43,9 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, isAuthenticated: false });
       },
 
-      loadUsers: () => {
-        // Solo cargar usuarios desde localStorage (para panel admin)
-        const users = JSON.parse(localStorage.getItem('iphonelecheria-users') || '[]');
+      loadUsers: async () => {
+        // Cargar usuarios desde Supabase o localStorage
+        const users = await authService.getAllUsers();
         set({ users });
       },
     }),

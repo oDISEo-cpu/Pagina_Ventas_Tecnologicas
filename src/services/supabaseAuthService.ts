@@ -29,7 +29,7 @@ export const authService = {
 
         const { error: dbError } = await supabase
           .from('users')
-          .insert([userData]);
+          .upsert(userData, { onConflict: 'id' });
 
         if (dbError) throw dbError;
 
@@ -162,5 +162,39 @@ export const authService = {
       });
     }
     return { data: { subscription: { unsubscribe: () => {} } } };
+  },
+
+  // Obtener todos los usuarios (solo para admin)
+  async getAllUsers(): Promise<User[]> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        return (data || []).map((userData: any) => ({
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          cedula: userData.cedula,
+          role: userData.role,
+          createdAt: userData.created_at
+        }));
+      } catch (error) {
+        console.error('Error obteniendo usuarios de Supabase:', error);
+        return [];
+      }
+    }
+    
+    // Fallback a localStorage
+    const users = JSON.parse(localStorage.getItem('iphonelecheria-users') || '[]');
+    return users.map((u: any) => {
+      const { password: _, ...userWithoutPassword } = u;
+      return userWithoutPassword;
+    });
   }
 };
